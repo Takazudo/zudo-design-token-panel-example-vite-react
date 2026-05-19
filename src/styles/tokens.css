@@ -123,7 +123,6 @@ body {
   background: var(--vr-bg);
   color: var(--vr-fg);
   font-size: var(--vr-scale-base);
-  padding: var(--vr-vsp-xl) var(--vr-hsp-xl);
 }
 
 .vr-stack {
@@ -240,7 +239,7 @@ body {
  * without escalation.
  * --------------------------------------------------------------------------- */
 .vr-prose {
-  max-width: 52rem;
+  max-width: 48rem;
   margin: 0 auto;
   padding: var(--vr-vsp-2xl) var(--vr-hsp-xl);
   font-size: var(--vr-text-body);
@@ -273,19 +272,21 @@ body {
 .vr-prose > :last-child  { margin-block-end: 0; }
 
 /* Type scale */
-.vr-prose h2 {
+.vr-prose :where(h2) {
   font-size: var(--vr-text-page-title);
   line-height: var(--vr-leading-tight);
   font-weight: 700;
   color: var(--vr-color-primary);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--vr-color-muted);
 }
-.vr-prose h3 {
+.vr-prose :where(h3) {
   font-size: var(--vr-text-section-title);
   line-height: var(--vr-leading-tight);
   font-weight: 600;
-  color: var(--vr-color-primary);
+  color: var(--vr-fg);
 }
-.vr-prose h4 {
+.vr-prose :where(h4) {
   font-size: var(--vr-text-subsection-title);
   line-height: var(--vr-leading-snug);
   font-weight: 600;
@@ -356,14 +357,13 @@ body {
   border-collapse: collapse;
   font-size: var(--vr-text-helper);
 }
-.vr-prose th,
-.vr-prose td {
-  border: 1px solid var(--vr-color-muted);
+.vr-prose :where(th, td) {
+  border-bottom: 1px solid var(--vr-color-muted);
   padding: var(--vr-hsp-xs) var(--vr-hsp-sm);
   text-align: left;
 }
-.vr-prose th {
-  background: var(--vr-color-surface);
+.vr-prose :where(th) {
+  border-bottom: 2px solid var(--vr-color-muted);
   font-weight: 600;
 }
 

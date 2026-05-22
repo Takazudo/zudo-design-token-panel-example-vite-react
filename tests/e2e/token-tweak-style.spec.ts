@@ -153,15 +153,21 @@ test.describe('Vite + React example — token tweak → computed style', () => {
       .first()
       .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 
-    // Set --vr-scale-md directly on :root — equivalent to what the panel slider
-    // does (it calls document.documentElement.style.setProperty via the state
-    // override mechanism).  Driving the range slider's synthetic event chain
-    // reliably in Playwright requires a native InputEvent dispatch; we bypass
-    // the panel UI and assert the CSS cascade contract directly.
-    // reason: Preact's onChange fires on the native 'change' event; Playwright
-    // fill() on a range input doesn't reliably synthesize a Preact-compatible
-    // InputEvent in headless Chromium. Direct :root setProperty tests the same
-    // CSS cascade contract without coupling to panel widget internals.
+    // Set --vr-scale-md directly on :root — bypassing the panel UI to assert
+    // the CSS cascade contract (--vr-scale-md → --vr-text-subsection-title →
+    // .vr-subsection-title font-size). This is the contract the panel slider
+    // ultimately drives; the docblock for this test scopes it to the cascade,
+    // not the panel-input commit chain.
+    //
+    // Why bypass rather than fill() the panel input: Playwright's fill()
+    // cannot reliably drive `type="range"` inputs in headless Chromium —
+    // range inputs require mouse drag events. The alternative `type="text"`
+    // numeric input alongside the slider IS driveable by fill(), but with
+    // the panel's mount-time semantic-tier override behavior the chain
+    // doesn't always propagate to downstream tokens cleanly under the
+    // current panel state model (see zudo-design-token-panel#264 findings
+    // for the Preact-compat event model — onChange maps to native `input`,
+    // not `change`).
     await page.evaluate(() => {
       document.documentElement.style.setProperty('--vr-scale-md', '1.5rem');
     });
@@ -215,10 +221,12 @@ test.describe('Vite + React example — token tweak → computed style', () => {
       .first()
       .evaluate((el) => parseFloat(getComputedStyle(el).paddingTop));
 
-    // Set --vr-vsp-md to 2rem.  2rem @ 16px root = 32px.
+    // Set --vr-vsp-md to 2rem. 2rem @ 16px root = 32px.
+    // fill() dispatches a native input event which Preact-compat routes to
+    // the panel's onChange handler (verified in zudo-design-token-panel#264);
+    // explicit dispatchEvent('input') and dispatchEvent('change') are
+    // redundant and were dropped.
     await vspMdInput.fill('2');
-    await vspMdInput.dispatchEvent('input');
-    await vspMdInput.dispatchEvent('change');
 
     const expectedPx = 32;
     await expect

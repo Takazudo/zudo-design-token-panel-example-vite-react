@@ -13,7 +13,7 @@ permissions:
   pull-requests: write
 
 env:
-  PANEL_PINNED_SHA: fcf42a1c93b70df1cde812e47b62921dbd1b564b
+  PANEL_PINNED_SHA: 7341033c8fb29cb36bccd02ecc23fd1a01c856b8
 
 concurrency:
   group: deploy-${{ github.ref }}

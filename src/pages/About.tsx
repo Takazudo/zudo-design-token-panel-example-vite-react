@@ -2,7 +2,7 @@
  * About page of the Vite + React example.
  *
  * Introduces this example app: its purpose (demonstrating
- * @takazudo/zudo-design-token-panel in a plain Vite + React host), the
+ * @takazudo/zdtp in a plain Vite + React host), the
  * token namespace it uses, and where to find the panel.
  */
 
@@ -15,7 +15,7 @@ export function About() {
         </div>
         <div className="vr-body">
           This Vite + React example demonstrates{' '}
-          <code>@takazudo/zudo-design-token-panel</code> running inside a plain
+          <code>@takazudo/zdtp</code> running inside a plain
           React 18 host — no Tailwind, no design-system integration, just
           React and Preact coexisting in the same Vite build.
         </div>

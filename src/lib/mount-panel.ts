@@ -1,8 +1,8 @@
 /**
- * Vite + React host adapter for `@takazudo/zudo-design-token-panel`.
+ * Vite + React host adapter for `@takazudo/zdtp`.
  *
  * The Astro example ships a package-provided host adapter
- * (`@takazudo/zudo-design-token-panel/astro/host-adapter`) that runs from a
+ * (`@takazudo/zdtp/astro/host-adapter`) that runs from a
  * per-page `<script>` block in `DesignTokenPanelHost.astro`. Vite + React has
  * no equivalent host component — the panel is mounted as a Preact island
  * from a React `useEffect`. So the adapter logic is ported here.
@@ -60,11 +60,11 @@
  * continuity — see the comment on `storageKey_visible` in the package.
  */
 
-import type { PanelConfig } from '@takazudo/zudo-design-token-panel';
+import type { PanelConfig } from '@takazudo/zdtp';
 import { panelConfig } from '../config/panel-config';
 
 // Mirrors the panel-module's main entry shape we lazy-import below.
-type DesignTokenPanelModule = typeof import('@takazudo/zudo-design-token-panel');
+type DesignTokenPanelModule = typeof import('@takazudo/zdtp');
 
 interface DesignTokenPanelAdapterState {
   /** Per-`storagePrefix` bind flag — re-runs of mountPanel are no-ops. */
@@ -158,7 +158,7 @@ function hasPersistedOverrides(stateV2Key: string): boolean {
  */
 async function loadPanelModule(state: DesignTokenPanelAdapterState) {
   if (state.modulePromise === null) {
-    state.modulePromise = import('@takazudo/zudo-design-token-panel').then((mod) => {
+    state.modulePromise = import('@takazudo/zdtp').then((mod) => {
       // Configure FIRST — every other panel API below reads
       // getPanelConfig() and must observe the host's intended values, not
       // the package's DEFAULT_PANEL_CONFIG sentinel.

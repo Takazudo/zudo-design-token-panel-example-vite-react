@@ -11,7 +11,7 @@
  * apply pipeline.
  */
 
-import type { ColorClusterConfig as ColorClusterDataConfig } from '@takazudo/zudo-design-token-panel';
+import type { ColorClusterConfig as ColorClusterDataConfig } from '@takazudo/zdtp';
 
 export const defaultCluster: ColorClusterDataConfig = {
   id: 'vr-cluster',

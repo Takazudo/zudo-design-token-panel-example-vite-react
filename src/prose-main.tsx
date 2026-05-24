@@ -12,7 +12,7 @@ import ReactDOM from 'react-dom/client';
 
 import './styles/reset.css';
 import './styles/tokens.css';
-import '@takazudo/zudo-design-token-panel/styles';
+import '@takazudo/zdtp/styles';
 
 import { ProseDemo } from './components/ProseDemo';
 

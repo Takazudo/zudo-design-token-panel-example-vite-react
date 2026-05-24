@@ -23,7 +23,7 @@
  * agree byte-for-byte on which CSS-var prefix maps to which file.
  */
 
-import type { PanelConfig } from '@takazudo/zudo-design-token-panel';
+import type { PanelConfig } from '@takazudo/zdtp';
 import { defaultTabs } from './default-manifest';
 import scaffoldRouting from '../../scaffold.routing.json';
 

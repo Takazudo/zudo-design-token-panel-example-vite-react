@@ -14,9 +14,9 @@ importers:
       '@mdx-js/rollup':
         specifier: ^3.1.1
         version: 3.1.1(rollup@4.60.4)
-      '@takazudo/zudo-design-token-panel':
-        specifier: file:../zudo-design-token-panel/packages/zudo-design-token-panel
-        version: file:../zudo-design-token-panel/packages/zudo-design-token-panel(preact@10.29.2)
+      '@takazudo/zdtp':
+        specifier: 0.1.0-next.0
+        version: 0.1.0-next.0(preact@10.29.2)
       preact:
         specifier: ^10.29.1
         version: 10.29.2
@@ -487,8 +487,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@takazudo/zudo-design-token-panel@file:../zudo-design-token-panel/packages/zudo-design-token-panel':
-    resolution: {directory: ../zudo-design-token-panel/packages/zudo-design-token-panel, type: directory}
+  '@takazudo/zdtp@0.1.0-next.0':
+    resolution: {integrity: sha512-eKE+xEZfCeaxe3VAektz8+8plk/EaOOZmS/SKJB5g3qFZF4pWHfzNhngyDAvUkj3f2yCpnIyT+xeZjZqQ1f7Lg==}
+    engines: {node: '>=22.0.0', pnpm: '>=10.0.0'}
     hasBin: true
     peerDependencies:
       preact: ^10.29.1
@@ -1599,7 +1600,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.4':
     optional: true
 
-  '@takazudo/zudo-design-token-panel@file:../zudo-design-token-panel/packages/zudo-design-token-panel(preact@10.29.2)':
+  '@takazudo/zdtp@0.1.0-next.0(preact@10.29.2)':
     dependencies:
       culori: 4.0.2
       preact: 10.29.2

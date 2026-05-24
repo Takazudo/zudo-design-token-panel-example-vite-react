@@ -1,7 +1,7 @@
 # zudo-design-token-panel-example-vite-react
 
 Standalone Vite 6 + React 18 example for
-[@takazudo/zudo-design-token-panel](https://github.com/Takazudo/zudo-design-token-panel).
+[@takazudo/zdtp](https://github.com/Takazudo/zudo-design-token-panel).
 
 Deployed to Cloudflare Pages at
 `https://zudo-design-token-panel-example-vite-react.pages.dev/`.
@@ -41,7 +41,7 @@ Runs two processes via `concurrently`:
 | process | port  | role                                                                         |
 | ------- | ----- | ---------------------------------------------------------------------------- |
 | Vite    | 44325 | the example site                                                             |
-| bin     | 24683 | `design-token-panel-server` — receives `/apply` POSTs, rewrites `tokens.css` |
+| bin     | 24683 | `zdtp-server` — receives `/apply` POSTs, rewrites `tokens.css` |
 
 Open [http://localhost:44325](http://localhost:44325) and run
 `window.vr.toggleDesignPanel()` in the browser console to open the panel.

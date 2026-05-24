@@ -29,7 +29,7 @@
  * framework-demo-parity (#187) to match zfb-tailwind vocabulary.
  */
 
-import type { PanelConfig } from '@takazudo/zudo-design-token-panel';
+import type { PanelConfig } from '@takazudo/zdtp';
 import { defaultCluster } from './default-cluster';
 
 type TabConfig = PanelConfig['tabs'][number];

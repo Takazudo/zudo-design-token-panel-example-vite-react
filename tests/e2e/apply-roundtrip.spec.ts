@@ -10,7 +10,7 @@
  * -------------
  *  - Vite dev server on port 44325 (started by the Playwright `webServer`
  *    config OR by an upstream `pnpm dev` invocation).
- *  - Bin sidecar `design-token-panel-server` on port 24683, with
+ *  - Bin sidecar `zdtp-server` on port 24683, with
  *    `--write-root .` and `--routing scaffold.routing.json` pointing at
  *    this example's tree.
  *

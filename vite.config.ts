@@ -4,7 +4,7 @@ import mdx from '@mdx-js/rollup';
 import remarkGfm from 'remark-gfm';
 
 /**
- * Vite + React example for @takazudo/zudo-design-token-panel.
+ * Vite + React example for @takazudo/zdtp.
  *
  * Deliberately minimal: NO Tailwind, NO design-system integration, NO MDX,
  * NO `react -> preact/compat` alias. The example proves the panel package
@@ -34,19 +34,6 @@ import remarkGfm from 'remark-gfm';
  * `/api/dev/apply` — it is a dev-server-only proxy target that does not exist
  * in the production deploy, so it must NOT be base-prefixed.
  *
- * optimizeDeps.exclude — panel served raw, not pre-bundled
- * --------------------------------------------------------
- * The panel is consumed via the `file:` protocol. Vite's optimizeDeps
- * pre-bundler content-hashes against `package.json` version, which does NOT
- * change when the linked panel's dist is rebuilt. The result is a stale
- * pre-bundle that survives panel SHA bumps — observed live in
- * Takazudo/zudo-design-token-panel#266 where a stale `.vite/deps/` cache
- * held a pre-#262 resolver and caused the semantic-tier cascade
- * (--vr-text-subsection-title -> --vr-scale-md) to collapse to scale-xs.
- *
- * Excluding the panel from optimizeDeps makes Vite serve the dist file
- * directly. HMR / page reload picks up dist changes immediately and the
- * stale-cache hazard is eliminated.
  */
 export default defineConfig({
   base: '/',
@@ -56,9 +43,6 @@ export default defineConfig({
     { enforce: 'pre', ...mdx({ jsxImportSource: 'react', providerImportSource: '@mdx-js/react', remarkPlugins: [remarkGfm] }) },
     react(),
   ],
-  optimizeDeps: {
-    exclude: ['@takazudo/zudo-design-token-panel'],
-  },
   build: {
     rollupOptions: {
       // Multi-page: emit dist/index.html and dist/prose.html as self-contained

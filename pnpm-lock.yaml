@@ -15,8 +15,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(rollup@4.60.4)
       '@takazudo/zdtp':
-        specifier: 0.2.0-next.2
-        version: 0.2.0-next.2(preact@10.29.2)
+        specifier: 0.2.1
+        version: 0.2.1(preact@10.29.2)
       preact:
         specifier: ^10.29.1
         version: 10.29.2
@@ -487,8 +487,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@takazudo/zdtp@0.2.0-next.2':
-    resolution: {integrity: sha512-NK37TXU+UvLG6SHKwSZOXj+2Nx9knrkVoZsaWL4tUsJMo9XbHVsh5qPVthbaO+M94aCeAD5mSNIhpM5pf2tniw==}
+  '@takazudo/zdtp@0.2.1':
+    resolution: {integrity: sha512-dVNo7Q3cYQjOnlbhbZcUa3a7cKXzX0SoXVtWBTgbtDRxrZd2Q02/MNKAKfy6KXH6rGbSQcRZVwdfQ6vx3tLwgw==}
     engines: {node: '>=22.0.0', pnpm: '>=10.0.0'}
     hasBin: true
     peerDependencies:
@@ -1600,7 +1600,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.4':
     optional: true
 
-  '@takazudo/zdtp@0.2.0-next.2(preact@10.29.2)':
+  '@takazudo/zdtp@0.2.1(preact@10.29.2)':
     dependencies:
       culori: 4.0.2
       preact: 10.29.2

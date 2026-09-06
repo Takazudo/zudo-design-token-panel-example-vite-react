@@ -38,6 +38,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { STORAGE_KEY_VISIBLE } from './panel-storage';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -45,8 +46,6 @@ const TOKENS_PATH = resolve(__dirname, '..', '..', 'src', 'styles', 'tokens.css'
 const APPLY_URL = 'http://127.0.0.1:24683/apply';
 const ORIGIN = 'http://localhost:44325';
 
-const STORAGE_PREFIX = 'vite-react-example-tokens';
-const STORAGE_KEY_VISIBLE = `${STORAGE_PREFIX}:visible`;
 
 async function readTokenValue(cssVar: string): Promise<string> {
   const css = await readFile(TOKENS_PATH, 'utf-8');

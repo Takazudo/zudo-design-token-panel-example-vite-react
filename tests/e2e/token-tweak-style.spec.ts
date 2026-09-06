@@ -50,17 +50,14 @@
  * Storage prefix: vite-react-example-tokens (storagePrefix in panel-config.ts)
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { clearPanelStorage, openPanel } from './panel-storage';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:44325';
-const STORAGE_PREFIX = 'vite-react-example-tokens';
-const STORAGE_KEY_VISIBLE = `${STORAGE_PREFIX}:visible`;
-const STORAGE_KEY_STATE_V2 = `${STORAGE_PREFIX}-state-v2`;
-const STORAGE_KEY_HIGHLIGHT_ACTIVE = `${STORAGE_PREFIX}-highlight-active`;
 
 function hashUrl(fragment: string): string {
   const frag = fragment.startsWith('#') ? fragment : `#${fragment}`;
@@ -70,34 +67,6 @@ function hashUrl(fragment: string): string {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Seed localStorage visible flag, reload, and wait for the panel shell.
- * Mirrors the approach in apply-roundtrip.spec.ts.
- */
-async function openPanel(page: Page): Promise<void> {
-  await page.evaluate((visibleKey) => {
-    localStorage.setItem(visibleKey, '1');
-  }, STORAGE_KEY_VISIBLE);
-
-  await page.reload();
-  await page.waitForLoadState('domcontentloaded');
-
-  await page.locator('.tokenpanel-shell').waitFor({ state: 'visible', timeout: 10_000 });
-}
-
-/** Clear all panel-related storage keys to keep tests idempotent. */
-async function clearPanelStorage(page: Page): Promise<void> {
-  await page.evaluate(
-    ([prefix, visibleKey, stateKey, highlightKey]) => {
-      localStorage.removeItem(visibleKey);
-      localStorage.removeItem(stateKey);
-      localStorage.removeItem(`${prefix}-highlight-slots`);
-      sessionStorage.removeItem(highlightKey);
-    },
-    [STORAGE_PREFIX, STORAGE_KEY_VISIBLE, STORAGE_KEY_STATE_V2, STORAGE_KEY_HIGHLIGHT_ACTIVE],
-  );
-}
 
 /**
  * Return the px float of a computed style value like "18px" → 18.

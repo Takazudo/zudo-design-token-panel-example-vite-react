@@ -236,8 +236,12 @@ jobs:
           }
 
           # / -> 200, main entry title.
+          # Match the FULL <title> element, not a bare substring: prose.html's
+          # title ("Prose Demo — Vite + React Example — Design Token Panel")
+          # CONTAINS the index title, so a substring grep would still pass if /
+          # ever served the wrong entry — the exact failure this asserts against.
           body=$(fetch -fL "$PREVIEW_URL/")
-          if ! grep -q "Vite + React Example — Design Token Panel" <<< "$body"; then
+          if ! grep -q "<title>Vite + React Example — Design Token Panel</title>" <<< "$body"; then
             echo "::error::GET / did not return the expected page title."
             exit 1
           fi

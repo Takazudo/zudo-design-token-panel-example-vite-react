@@ -1,26 +1,52 @@
-name: Deploy to Cloudflare Pages
+# Cloudflare Workers (static assets) deploy for this Vite + React example.
+#
+#   build   — always runs (push + PR): install, typecheck (`tsc --noEmit`),
+#             build (`vite build`). Needs no Cloudflare credentials, so a
+#             fresh clone or a fork is green immediately. This is the real
+#             correctness gate.
+#   deploy  — push to `main` only: `wrangler deploy` (uploads the Worker AND
+#             attaches the custom domain from wrangler.toml).
+#   preview — pull requests only: uploads a preview version, asserts the
+#             preview actually serves the expected routing matrix, and
+#             comments its URL on the PR. Uses `wrangler versions upload`,
+#             which does NOT touch routes, so previews never publish to the
+#             custom domain.
+#
+# Both credentialed jobs SELF-SKIP when either secrets.CLOUDFLARE_API_TOKEN or
+# secrets.CLOUDFLARE_ACCOUNT_ID is unset, so the repo is not red-by-design
+# before Cloudflare is wired up (and so fork PRs, which never receive secrets,
+# stay green).
+#
+# No `branches:` filter on `pull_request` below — sub-PRs in this repo target
+# stacked base branches (e.g. `base/workers-migration-deps`), not `main`
+# directly. A `[main]` filter would give those PRs no CI at all.
+#
+# Enable deploys by adding, in repo Settings -> Secrets and variables -> Actions:
+#   CLOUDFLARE_API_TOKEN   token with Account · Workers Scripts: Edit,
+#                          Account · Account Settings: Read, and
+#                          Zone · Workers Routes + DNS: Edit on zudolab.dev
+#                          (required by the custom domain)
+#   CLOUDFLARE_ACCOUNT_ID  target Cloudflare account id
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
-
-permissions:
-  contents: read
-  pull-requests: write
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: false
+  # Cancel superseded PR runs, but never interrupt a production deploy midway.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-deploy:
-    name: Build and deploy
+  build:
+    name: Build (typecheck + vite build)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -33,93 +59,254 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install wrangler
-        run: npm install -g wrangler@4
-
-      - name: Install consumer dependencies
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build consumer
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
         run: pnpm build
 
-      - name: Compute deploy branch
-        id: branch
-        run: |
-          # Use pr-<number> as the slug for PRs — Cloudflare Pages truncates branch
-          # alias subdomains to 28 chars, silently breaking the preview URL for any
-          # branch name longer than that. pr-<n> is stable and short.
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            DEPLOY_BRANCH="pr-${{ github.event.pull_request.number }}"
-          else
-            DEPLOY_BRANCH=main
-          fi
-          echo "deploy_branch=${DEPLOY_BRANCH}" >> "$GITHUB_OUTPUT"
+      # Runs AFTER the build (it reads ./dist) and needs no Cloudflare
+      # credentials, so this is the only place wrangler.toml is parsed on a
+      # fork PR or a repo with no secrets. Without it a typo in wrangler.toml
+      # would pass every PR check and first surface in the production deploy.
+      - name: Validate wrangler.toml
+        run: pnpm exec wrangler deploy --dry-run
 
-      - name: Ensure Cloudflare Pages project exists
+  deploy:
+    name: Deploy to Cloudflare Workers
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Preflight — is Cloudflare configured?
+        id: preflight
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          # Idempotent: create on first run, no-op on subsequent runs.
-          # wrangler@4 no longer auto-creates the project on `pages deploy`.
-          out=$(wrangler pages project create zudo-design-token-panel-example-vite-react \
-            --production-branch=main 2>&1) && rc=0 || rc=$?
-          echo "$out"
-          if [ "$rc" -eq 0 ]; then
-            echo "Project created."
-          elif echo "$out" | grep -qE "already exists|8000077|duplicate"; then
-            echo "Project already exists — continuing."
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID is not set — skipping deploy. Add both in repo Settings to enable deploys."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Project create failed with unexpected error."
-            exit "$rc"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Deploy to Cloudflare Pages
-        id: deploy
+      - name: Deploy
+        if: steps.preflight.outputs.ready == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          DEPLOY_BRANCH: ${{ steps.branch.outputs.deploy_branch }}
-        run: |
-          for attempt in 1 2 3; do
-            echo "Deploy attempt $attempt/3..."
-            if wrangler pages deploy dist \
-              --project-name=zudo-design-token-panel-example-vite-react \
-              --branch="${DEPLOY_BRANCH}" \
-              --commit-hash="${GITHUB_SHA}"; then
-              echo "Deploy succeeded on attempt $attempt"
-              if [ "${DEPLOY_BRANCH}" = "main" ]; then
-                echo "deploy_url=https://zudo-design-token-panel-example-vite-react.pages.dev/" >> "$GITHUB_OUTPUT"
-              else
-                echo "deploy_url=https://${DEPLOY_BRANCH}.zudo-design-token-panel-example-vite-react.pages.dev/" >> "$GITHUB_OUTPUT"
-              fi
-              exit 0
-            fi
-            if [ "$attempt" -lt 3 ]; then
-              echo "Deploy failed, retrying in 150 seconds..."
-              sleep 150
-            fi
-          done
-          echo "Deploy failed after 3 attempts"
-          exit 1
+        run: pnpm exec wrangler deploy
 
-      - name: Comment on associated PR (if any)
-        if: github.event_name == 'pull_request' && steps.deploy.outcome == 'success'
+  preview:
+    name: Preview deploy
+    needs: build
+    # Fork PRs never receive repository secrets, so a preview could only fail
+    # there. Skip the job outright rather than letting it run and self-skip.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # `assets/<name>-<hash>.<ext>` filenames are content-hashed per build, so
+      # no fixed path can be hardcoded here. Pick one real emitted asset instead
+      # of guessing a filename.
+      - name: Find a static asset to probe
+        id: asset
+        run: |
+          # `-print -quit`, not `| head -n 1`: head closing the pipe early can
+          # SIGPIPE find, and the runner's `bash -eo pipefail` would then kill
+          # the step with 141 instead of reaching the check below. `|| true`
+          # keeps a missing directory on the same reporting path as an empty one.
+          asset_path=$(find dist/assets -type f -print -quit 2>/dev/null | sed 's#^dist/##' || true)
+          if [ -z "$asset_path" ]; then
+            echo "::error::No file found under dist/assets — build did not emit static assets."
+            exit 1
+          fi
+          echo "path=${asset_path}" >> "$GITHUB_OUTPUT"
+
+      - name: Preflight — is Cloudflare configured?
+        id: preflight
+        env:
+          # Fork PRs never receive secrets, so this is also the fork guard.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID is not available (unset, or this is a fork PR) — skipping preview deploy."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload preview version
+        id: preview
+        if: steps.preflight.outputs.ready == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          # Machine-readable NDJSON record of what wrangler did. The account's
+          # workers.dev subdomain is not known here, so the preview URL cannot be
+          # templated — and scraping the human-readable stdout is brittle. This
+          # file is the interface wrangler provides for CI.
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.ndjson
+        run: |
+          pnpm exec wrangler versions upload \
+            --preview-alias "pr-${PR_NUMBER}" \
+            --message "Preview for PR #${PR_NUMBER}"
+
+          # Guard with `[ -s ... ]` before jq: the runner's default
+          # `bash -eo pipefail` means a missing/empty file would make jq exit 2
+          # and `set -e` kills the step before the soft-skip notice below can
+          # fire. `tail -n 1`, not `head -1`: head closing the pipe early can
+          # SIGPIPE jq and fail the step with 141.
+          PREVIEW_URL=""
+          if [ -s "$WRANGLER_OUTPUT_FILE_PATH" ]; then
+            PREVIEW_URL=$(jq -r 'select(.type == "version-upload") | .preview_alias_url // empty' \
+              "$WRANGLER_OUTPUT_FILE_PATH" | tail -n 1)
+          fi
+
+          if [ -z "$PREVIEW_URL" ]; then
+            # Preview URLs additionally require the account to have a workers.dev
+            # subdomain with preview routing enabled (see wrangler.toml), and a
+            # brand-new Worker has zero prior deployments — expected on the very
+            # first PR against a freshly created Worker.
+            echo "::notice::Preview version uploaded, but no preview URL was reported — skipping the routing assertions and PR comment."
+          fi
+          echo "preview_url=${PREVIEW_URL}" >> "$GITHUB_OUTPUT"
+
+      # This cannot validate the custom domain — a preview never touches
+      # routes — but it is the only pre-merge evidence that the Worker and its
+      # assets actually serve this stack's routing contract correctly: the
+      # second MPA entry (the thing most likely to be silently lost), the
+      # flat-.html -> extensionless redirect, and an honest 404 for paths that
+      # HashRouter would otherwise resolve client-side. Hash routes
+      # (`/#/about`) are NOT asserted here — the fragment never reaches the
+      # server, so an HTTP request against one is meaningless.
+      - name: Assert preview serves the expected routing matrix
+        if: steps.preview.outputs.preview_url != ''
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
+          STATIC_ASSET_PATH: ${{ steps.asset.outputs.path }}
+        run: |
+          # A just-created preview alias can 404 / return edge errors for a few
+          # seconds while it propagates, so retry rather than fail the PR check
+          # on timing.
+          fetch() {
+            curl -sS --retry 6 --retry-delay 5 --retry-all-errors "$@"
+          }
+
+          # / -> 200, main entry title.
+          # Match the FULL <title> element, not a bare substring: prose.html's
+          # title ("Prose Demo — Vite + React Example — Design Token Panel")
+          # CONTAINS the index title, so a substring grep would still pass if /
+          # ever served the wrong entry — the exact failure this asserts against.
+          body=$(fetch -fL "$PREVIEW_URL/")
+          if ! grep -q "<title>Vite + React Example — Design Token Panel</title>" <<< "$body"; then
+            echo "::error::GET / did not return the expected page title."
+            exit 1
+          fi
+          echo "OK: / served the expected title."
+
+          # /prose.html -> 307 redirect to /prose. Under the default
+          # html_handling = "auto-trailing-slash", a flat .html path is
+          # canonicalised to its extensionless form.
+          redirect_status=$(fetch -o /dev/null -w '%{http_code}' "$PREVIEW_URL/prose.html")
+          redirect_target=$(fetch -o /dev/null -w '%{redirect_url}' "$PREVIEW_URL/prose.html")
+          if [ "$redirect_status" != "307" ] || [[ "$redirect_target" != */prose ]]; then
+            echo "::error::GET /prose.html did not 307-redirect to /prose (status: ${redirect_status}, target: '${redirect_target}')."
+            exit 1
+          fi
+          echo "OK: /prose.html redirected (307) to ${redirect_target}."
+
+          # /prose -> 200, second MPA entry title. This is the entry most
+          # likely to be silently lost in a multi-page-input build.
+          body=$(fetch -fL "$PREVIEW_URL/prose")
+          if ! grep -q "Prose Demo — Vite + React Example — Design Token Panel" <<< "$body"; then
+            echo "::error::GET /prose did not return the expected page title."
+            exit 1
+          fi
+          echo "OK: /prose served the expected title."
+
+          # One /assets/... file -> 200.
+          status=$(fetch -o /dev/null -w '%{http_code}' "$PREVIEW_URL/$STATIC_ASSET_PATH")
+          if [ "$status" != "200" ]; then
+            echo "::error::GET /${STATIC_ASSET_PATH} returned status ${status}, expected 200."
+            exit 1
+          fi
+          echo "OK: /${STATIC_ASSET_PATH} returned 200."
+
+          # /definitely-missing -> 404. not_found_handling is deliberately
+          # omitted (see wrangler.toml) since HashRouter has no server-visible
+          # deep paths to fall back for, so a generic edge 404 is correct here.
+          status=$(fetch -o /dev/null -w '%{http_code}' "$PREVIEW_URL/definitely-missing")
+          if [ "$status" != "404" ]; then
+            echo "::error::GET /definitely-missing returned status ${status}, expected 404."
+            exit 1
+          fi
+          echo "OK: /definitely-missing returned 404."
+
+      - name: Comment preview URL on the PR
+        if: steps.preview.outputs.preview_url != ''
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
-          DEPLOY_URL: ${{ steps.deploy.outputs.deploy_url }}
+          PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
         with:
           script: |
-            const deployUrl = process.env.DEPLOY_URL;
+            const previewUrl = process.env.PREVIEW_URL;
             const marker = '<!-- cf-preview-branch -->';
-            const prNumber = context.issue.number;
+            const body = `${marker}\n### Preview deployed\n\nThis PR is live at: ${previewUrl}\n\n_Updated for commit \`${context.sha.substring(0, 7)}\`._`;
 
-            const body = `${marker}\n### Preview deployed\n\nPreview is live at: ${deployUrl}\n\n_Updated for commit \`${context.sha.substring(0, 7)}\`._`;
-
-            const { data: comments } = await github.rest.issues.listComments({
+            // Paginate — with the default page size an older marker comment on a
+            // long PR would be missed and a duplicate posted every run.
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber,
+              issue_number: context.issue.number,
+              per_page: 100,
             });
             const existing = comments.find((c) => c.body && c.body.startsWith(marker));
 
@@ -134,7 +321,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: prNumber,
+                issue_number: context.issue.number,
                 body,
               });
             }

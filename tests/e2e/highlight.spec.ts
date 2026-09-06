@@ -29,17 +29,14 @@
  *   vite-react-example-tokens  (storagePrefix in panel-config.ts)
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { clearPanelStorage, openPanel } from './panel-storage';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:44325';
-const STORAGE_PREFIX = 'vite-react-example-tokens';
-const STORAGE_KEY_VISIBLE = `${STORAGE_PREFIX}:visible`;
-const STORAGE_KEY_STATE_V2 = `${STORAGE_PREFIX}-state-v2`;
-const STORAGE_KEY_HIGHLIGHT_ACTIVE = `${STORAGE_PREFIX}-highlight-active`;
 
 /** Absolute URL for a hash route fragment. */
 function hashUrl(fragment: string): string {
@@ -59,43 +56,6 @@ const ALL_ROUTES = [
   { label: 'Data',    url: hashUrl('#/data') },
   { label: 'Prose',   url: PROSE_URL },
 ] as const;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Seed localStorage visible flag, reload, and wait for the panel module to
- * load.  After this call the panel's .tokenpanel-shell is in the DOM.
- */
-async function openPanel(page: Page): Promise<void> {
-  // Seed visibility so the adapter eagerly loads the panel module on the next
-  // navigation (mirror of apply-roundtrip.spec.ts pattern).
-  await page.evaluate((visibleKey) => {
-    localStorage.setItem(visibleKey, '1');
-  }, STORAGE_KEY_VISIBLE);
-
-  await page.reload();
-  await page.waitForLoadState('domcontentloaded');
-
-  // Wait for the panel shell to appear in the DOM.
-  const panelShell = page.locator('.tokenpanel-shell');
-  await panelShell.waitFor({ state: 'visible', timeout: 10_000 });
-}
-
-/** Clear all panel-related localStorage and sessionStorage keys. */
-async function clearPanelStorage(page: Page): Promise<void> {
-  await page.evaluate(
-    ([prefix, visibleKey, stateKey, highlightKey]) => {
-      localStorage.removeItem(visibleKey);
-      localStorage.removeItem(stateKey);
-      // Highlight slots key
-      localStorage.removeItem(`${prefix}-highlight-slots`);
-      sessionStorage.removeItem(highlightKey);
-    },
-    [STORAGE_PREFIX, STORAGE_KEY_VISIBLE, STORAGE_KEY_STATE_V2, STORAGE_KEY_HIGHLIGHT_ACTIVE],
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Tests

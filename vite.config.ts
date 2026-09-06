@@ -27,7 +27,7 @@ import remarkGfm from 'remark-gfm';
  *
  * Deploy base path
  * ----------------
- * `base: '/'` — the standalone repo deploys to the Cloudflare Pages root,
+ * `base: '/'` — the standalone repo deploys to the Cloudflare Workers root,
  * so no prefix is needed. Both the dev server and production build serve at `/`.
  *
  * `panelConfig.applyEndpoint` deliberately stays as the bare relative path

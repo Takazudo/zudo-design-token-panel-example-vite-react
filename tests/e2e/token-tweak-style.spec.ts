@@ -42,25 +42,23 @@
  * -----------------------
  * The panel adapter lazy-loads the panel module when localStorage visible='1'
  * is set.  We seed that flag, reload, and wait for .tokenpanel-shell before
- * driving sliders.  The spacing / font tabs have range inputs with aria-label;
- * the color palette palette-1 row has a color swatch.  See default-manifest.ts
- * for exact label strings.
+ * driving inputs.  Each token row in the spacing / font tabs exposes a numeric
+ * input whose accessible name is `${item.cssVar} value`; the color palette
+ * palette-1 row has a color swatch.  See default-manifest.ts for exact label
+ * strings.
  *
  * Window namespace: window.vr (consoleNamespace in panel-config.ts)
  * Storage prefix: vite-react-example-tokens (storagePrefix in panel-config.ts)
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { clearPanelStorage, openPanel } from './panel-storage';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
 const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:44325';
-const STORAGE_PREFIX = 'vite-react-example-tokens';
-const STORAGE_KEY_VISIBLE = `${STORAGE_PREFIX}:visible`;
-const STORAGE_KEY_STATE_V2 = `${STORAGE_PREFIX}-state-v2`;
-const STORAGE_KEY_HIGHLIGHT_ACTIVE = `${STORAGE_PREFIX}-highlight-active`;
 
 function hashUrl(fragment: string): string {
   const frag = fragment.startsWith('#') ? fragment : `#${fragment}`;
@@ -70,34 +68,6 @@ function hashUrl(fragment: string): string {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Seed localStorage visible flag, reload, and wait for the panel shell.
- * Mirrors the approach in apply-roundtrip.spec.ts.
- */
-async function openPanel(page: Page): Promise<void> {
-  await page.evaluate((visibleKey) => {
-    localStorage.setItem(visibleKey, '1');
-  }, STORAGE_KEY_VISIBLE);
-
-  await page.reload();
-  await page.waitForLoadState('domcontentloaded');
-
-  await page.locator('.tokenpanel-shell').waitFor({ state: 'visible', timeout: 10_000 });
-}
-
-/** Clear all panel-related storage keys to keep tests idempotent. */
-async function clearPanelStorage(page: Page): Promise<void> {
-  await page.evaluate(
-    ([prefix, visibleKey, stateKey, highlightKey]) => {
-      localStorage.removeItem(visibleKey);
-      localStorage.removeItem(stateKey);
-      localStorage.removeItem(`${prefix}-highlight-slots`);
-      sessionStorage.removeItem(highlightKey);
-    },
-    [STORAGE_PREFIX, STORAGE_KEY_VISIBLE, STORAGE_KEY_STATE_V2, STORAGE_KEY_HIGHLIGHT_ACTIVE],
-  );
-}
 
 /**
  * Return the px float of a computed style value like "18px" → 18.
@@ -141,11 +111,12 @@ test.describe('Vite + React example — token tweak → computed style', () => {
     await fontTab.waitFor({ state: 'visible', timeout: 5_000 });
     await fontTab.click();
 
-    // Wait for the Font tab content to be ready by checking for a known slider.
-    // The panel renders a range slider with aria-label "--vr-scale-md slider"
-    // (_generic-item-editor.tsx line 108).
-    const scaleMdSlider = page.getByLabel('--vr-scale-md slider').first();
-    await scaleMdSlider.waitFor({ state: 'visible', timeout: 5_000 });
+    // Wait for the Font tab content to be ready by checking for a known
+    // control. The numeric input's accessible name is `${item.cssVar} value`
+    // — there is no `${cssVar} slider` accessible name, so probing for one
+    // only ever timed out and this test never reached its assertions.
+    const scaleMdInput = page.getByLabel('--vr-scale-md value').first();
+    await scaleMdInput.waitFor({ state: 'visible', timeout: 5_000 });
 
     // Capture the original font-size of the first .vr-subsection-title element.
     const originalFontSize = await page

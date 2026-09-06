@@ -46,7 +46,6 @@ const TOKENS_PATH = resolve(__dirname, '..', '..', 'src', 'styles', 'tokens.css'
 const APPLY_URL = 'http://127.0.0.1:24683/apply';
 const ORIGIN = 'http://localhost:44325';
 
-
 async function readTokenValue(cssVar: string): Promise<string> {
   const css = await readFile(TOKENS_PATH, 'utf-8');
   const escaped = cssVar.replace(/-/g, '\\-');

@@ -36,10 +36,10 @@ import {
 } from '@takazudo/zdtp/constants';
 
 /** Mirrors `storagePrefix` in `src/config/panel-config.ts`. */
-export const STORAGE_PREFIX = 'vite-react-example-tokens';
+const STORAGE_PREFIX = 'vite-react-example-tokens';
 
 /**
- * The `:visible` flag, seeded by `seedPanelVisible` below.
+ * The `:visible` flag, seeded by `openPanel` below.
  *
  * `'1'` is the canonical truthy value — the package's registry lists it as
  * the only accepted value for this suffix, so any other value is ignored by
@@ -66,7 +66,7 @@ const LOCAL_KEYS: readonly string[] = [
  * first paint, which is the behaviour that regresses when the gate probes a
  * storage key the package no longer writes.
  */
-export async function openPanel(page: Page, timeout = 10_000): Promise<void> {
+export async function openPanel(page: Page): Promise<void> {
   await page.evaluate((visibleKey) => {
     localStorage.setItem(visibleKey, '1');
   }, STORAGE_KEY_VISIBLE);
@@ -74,7 +74,7 @@ export async function openPanel(page: Page, timeout = 10_000): Promise<void> {
   await page.reload();
   await page.waitForLoadState('domcontentloaded');
 
-  await page.locator('.tokenpanel-shell').waitFor({ state: 'visible', timeout });
+  await page.locator('.tokenpanel-shell').waitFor({ state: 'visible', timeout: 10_000 });
 }
 
 /** Remove every panel key so the next test starts from a clean slate. */

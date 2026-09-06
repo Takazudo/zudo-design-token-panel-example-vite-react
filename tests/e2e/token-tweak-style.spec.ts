@@ -42,9 +42,10 @@
  * -----------------------
  * The panel adapter lazy-loads the panel module when localStorage visible='1'
  * is set.  We seed that flag, reload, and wait for .tokenpanel-shell before
- * driving sliders.  The spacing / font tabs have range inputs with aria-label;
- * the color palette palette-1 row has a color swatch.  See default-manifest.ts
- * for exact label strings.
+ * driving inputs.  Each token row in the spacing / font tabs exposes a numeric
+ * input whose accessible name is `${item.cssVar} value`; the color palette
+ * palette-1 row has a color swatch.  See default-manifest.ts for exact label
+ * strings.
  *
  * Window namespace: window.vr (consoleNamespace in panel-config.ts)
  * Storage prefix: vite-react-example-tokens (storagePrefix in panel-config.ts)
@@ -110,11 +111,12 @@ test.describe('Vite + React example — token tweak → computed style', () => {
     await fontTab.waitFor({ state: 'visible', timeout: 5_000 });
     await fontTab.click();
 
-    // Wait for the Font tab content to be ready by checking for a known slider.
-    // The panel renders a range slider with aria-label "--vr-scale-md slider"
-    // (_generic-item-editor.tsx line 108).
-    const scaleMdSlider = page.getByLabel('--vr-scale-md slider').first();
-    await scaleMdSlider.waitFor({ state: 'visible', timeout: 5_000 });
+    // Wait for the Font tab content to be ready by checking for a known
+    // control. The numeric input's accessible name is `${item.cssVar} value`
+    // — there is no `${cssVar} slider` accessible name, so probing for one
+    // only ever timed out and this test never reached its assertions.
+    const scaleMdInput = page.getByLabel('--vr-scale-md value').first();
+    await scaleMdInput.waitFor({ state: 'visible', timeout: 5_000 });
 
     // Capture the original font-size of the first .vr-subsection-title element.
     const originalFontSize = await page

@@ -62,14 +62,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify wrangler CLI
-        run: pnpm exec wrangler --version
-
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Build
         run: pnpm build
+
+      # Runs AFTER the build (it reads ./dist) and needs no Cloudflare
+      # credentials, so this is the only place wrangler.toml is parsed on a
+      # fork PR or a repo with no secrets. Without it a typo in wrangler.toml
+      # would pass every PR check and first surface in the production deploy.
+      - name: Validate wrangler.toml
+        run: pnpm exec wrangler deploy --dry-run
 
   deploy:
     name: Deploy to Cloudflare Workers

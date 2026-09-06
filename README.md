@@ -3,8 +3,8 @@
 Standalone Vite 6 + React 18 example for
 [@takazudo/zdtp](https://github.com/Takazudo/zudo-design-token-panel).
 
-Deployed to Cloudflare Pages at
-`https://zudo-design-token-panel-example-vite-react.pages.dev/`.
+Deployed to Cloudflare Workers Static Assets at
+`https://zdtp-vite-react.zudolab.dev/`.
 
 ## Sibling layout
 

@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import mdx from '@mdx-js/rollup';
 import remarkGfm from 'remark-gfm';
+import { VITE_PORT, ZDTP_PORT } from './scripts/ports.mjs';
 
 /**
  * Vite + React example for @takazudo/zdtp.
@@ -34,6 +35,13 @@ import remarkGfm from 'remark-gfm';
  * `/api/dev/apply` — it is a dev-server-only proxy target that does not exist
  * in the production deploy, so it must NOT be base-prefixed.
  *
+ * Worktree-safe ports
+ * -------------------
+ * `VITE_PORT` / `ZDTP_PORT` let concurrent git worktrees of this repo run on
+ * distinct port pairs; both resolve in `scripts/ports.mjs`. The proxy target
+ * below is derived from `ZDTP_PORT` — it must never be configured
+ * independently of the sidecar's own `--port` (see `_dev:tokens-bin` in
+ * package.json), or the two drift apart.
  */
 export default defineConfig({
   base: '/',
@@ -54,13 +62,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 44325,
+    port: VITE_PORT,
+    strictPort: true,
     proxy: {
       '/api/dev/apply': {
-        target: 'http://127.0.0.1:24683',
+        target: `http://127.0.0.1:${ZDTP_PORT}`,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/dev\/apply/, '/apply'),
       },
     },
+  },
+  preview: {
+    port: VITE_PORT,
+    strictPort: true,
   },
 });

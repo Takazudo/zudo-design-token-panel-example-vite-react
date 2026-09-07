@@ -53,12 +53,11 @@
 
 import { test, expect } from '@playwright/test';
 import { clearPanelStorage, openPanel } from './panel-storage';
+import { BROWSER_ORIGIN as ORIGIN } from '../../scripts/ports.mjs';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:44325';
 
 function hashUrl(fragment: string): string {
   const frag = fragment.startsWith('#') ? fragment : `#${fragment}`;

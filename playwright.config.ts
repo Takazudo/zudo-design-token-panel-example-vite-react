@@ -8,6 +8,10 @@
  */
 
 import { defineConfig, devices } from '@playwright/test';
+// VITE_PORT lets concurrent worktrees of this repo run on distinct ports; it
+// resolves in exactly one place so vite.config.ts, package.json's
+// `_dev:tokens-bin` and this baseURL cannot disagree.
+import { VITE_PORT } from './scripts/ports.mjs';
 
 const hasExternalBaseUrl = Boolean(process.env.BASE_URL);
 
@@ -21,7 +25,7 @@ export default defineConfig({
   maxFailures: 0,
   timeout: process.env.CI ? 60 * 1000 : 30 * 1000,
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:44325',
+    baseURL: process.env.BASE_URL || `http://localhost:${VITE_PORT}`,
     trace: 'on-first-retry',
     viewport: { width: 1280, height: 720 },
     ignoreHTTPSErrors: true,
@@ -39,8 +43,8 @@ export default defineConfig({
       ? undefined
       : {
           command: 'pnpm dev',
-          port: 44325,
-          reuseExistingServer: true,
+          port: VITE_PORT,
+          reuseExistingServer: false,
           timeout: 120 * 1000,
         },
 });

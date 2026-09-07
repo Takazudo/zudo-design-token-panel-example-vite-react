@@ -9,12 +9,11 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "predev": "lsof -ti:44325 | xargs kill 2>/dev/null; lsof -ti:24683 | xargs kill 2>/dev/null; true",
     "dev": "concurrently -k -n vite,tokens-bin -c blue,green \"pnpm run _dev:vite\" \"pnpm run _dev:tokens-bin\"",
-    "_dev:vite": "vite --port 44325",
-    "_dev:tokens-bin": "zdtp-server --write-root . --routing scaffold.routing.json --port 24683 --allow-origin http://localhost:44325",
+    "_dev:vite": "vite",
+    "_dev:tokens-bin": "zdtp-server --write-root . --routing scaffold.routing.json --port ${ZDTP_PORT:-24683} --allow-origin http://localhost:${VITE_PORT:-44325}",
     "build": "vite build",
-    "preview": "vite preview --port 44325",
+    "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test:apply-smoke": "node scripts/smoke-apply.mjs"
   },

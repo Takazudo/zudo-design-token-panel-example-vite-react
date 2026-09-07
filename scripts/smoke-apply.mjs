@@ -2,8 +2,9 @@
 /**
  * Manual smoke harness for the bin sidecar.
  *
- * Requires `pnpm dev` to already be running in this example sub-package
- * (so the bin is listening on http://127.0.0.1:24683). The harness:
+ * Requires `pnpm dev` to already be running in this example sub-package (so
+ * the bin is listening on 127.0.0.1:ZDTP_PORT, default 24683). Run it with
+ * the same VITE_PORT / ZDTP_PORT as that `pnpm dev`. The harness:
  *
  *   1. Reads the current value of `--vr-radius` from
  *      src/styles/tokens.css.
@@ -17,12 +18,19 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { VITE_PORT, ZDTP_PORT } from './ports.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const TOKENS_PATH = resolve(__dirname, '..', 'src', 'styles', 'tokens.css');
-const APPLY_URL = 'http://127.0.0.1:24683/apply';
-const ORIGIN = 'http://localhost:44325';
+
+// VITE_PORT / ZDTP_PORT let concurrent worktrees of this repo run on distinct
+// ports; ORIGIN must track VITE_PORT because the sidecar compares the
+// forwarded Origin header verbatim against its own --allow-origin. Both come
+// from scripts/ports.mjs so they cannot drift from package.json's
+// `_dev:tokens-bin` or from vite.config.ts's proxy target.
+const APPLY_URL = `http://127.0.0.1:${ZDTP_PORT}/apply`;
+const ORIGIN = `http://localhost:${VITE_PORT}`;
 const TARGET_VAR = '--vr-radius';
 const TEST_VALUE = '1.25rem';
 

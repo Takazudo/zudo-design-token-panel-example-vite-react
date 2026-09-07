@@ -21,8 +21,25 @@ import { dirname, resolve } from 'node:path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const TOKENS_PATH = resolve(__dirname, '..', 'src', 'styles', 'tokens.css');
-const APPLY_URL = 'http://127.0.0.1:24683/apply';
-const ORIGIN = 'http://localhost:44325';
+
+// VITE_PORT / ZDTP_PORT let concurrent worktrees of this repo run on
+// distinct ports — see vite.config.ts and package.json's `_dev:vite` /
+// `_dev:tokens-bin`. ORIGIN must track VITE_PORT: the sidecar compares the
+// forwarded Origin header verbatim against its own --allow-origin.
+function resolvePort(envVar, fallback) {
+  const raw = process.env[envVar];
+  if (raw === undefined || raw === '') return fallback;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`${envVar} must be an integer port, got ${JSON.stringify(raw)}`);
+  }
+  return parsed;
+}
+
+const ZDTP_PORT = resolvePort('ZDTP_PORT', 24683);
+const VITE_PORT = resolvePort('VITE_PORT', 44325);
+const APPLY_URL = `http://127.0.0.1:${ZDTP_PORT}/apply`;
+const ORIGIN = `http://localhost:${VITE_PORT}`;
 const TARGET_VAR = '--vr-radius';
 const TEST_VALUE = '1.25rem';
 

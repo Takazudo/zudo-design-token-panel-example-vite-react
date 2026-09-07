@@ -9,8 +9,9 @@
  *
  * Prerequisites
  * -------------
- *  - Vite dev server on port 44325 (started by the Playwright `webServer`
- *    config OR by an upstream `pnpm dev` invocation).
+ *  - Vite dev server on port 44325 by default, or `VITE_PORT` if set
+ *    (started by the Playwright `webServer` config OR by an upstream
+ *    `pnpm dev` invocation).
  *
  * Route inventory (7 routes tested):
  *   /                   → Home          (index.html, hash route /)
@@ -41,8 +42,9 @@ import { test, expect } from '@playwright/test';
 
 // Vite dev server origin — matches playwright.config.ts baseURL default.
 // reason: Playwright config may supply BASE_URL via env; we read it here
-// so the spec works in both local and CI contexts.
-const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:44325';
+// so the spec works in both local and CI contexts. Falls back to VITE_PORT
+// (see vite.config.ts) so the spec still works if only VITE_PORT is set.
+const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? `http://localhost:${process.env.VITE_PORT ?? 44325}`;
 
 /** Absolute URL for a hash route (e.g. '#/forms' → 'http://localhost:44325/#/forms'). */
 function hashUrl(fragment: string): string {

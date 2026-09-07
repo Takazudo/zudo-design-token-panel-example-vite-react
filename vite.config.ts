@@ -34,7 +34,26 @@ import remarkGfm from 'remark-gfm';
  * `/api/dev/apply` — it is a dev-server-only proxy target that does not exist
  * in the production deploy, so it must NOT be base-prefixed.
  *
+ * Worktree-safe ports
+ * -------------------
+ * `VITE_PORT` / `ZDTP_PORT` let concurrent git worktrees of this repo run on
+ * distinct port pairs. The proxy target below is derived from `ZDTP_PORT` —
+ * it must never be configured independently of the sidecar's own `--port`
+ * (see `_dev:tokens-bin` in package.json), or the two drift apart.
  */
+function resolvePort(envVar: string, fallback: number): number {
+  const raw = process.env[envVar];
+  if (raw === undefined || raw === '') return fallback;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed)) {
+    throw new Error(`${envVar} must be an integer port, got ${JSON.stringify(raw)}`);
+  }
+  return parsed;
+}
+
+const VITE_PORT = resolvePort('VITE_PORT', 44325);
+const ZDTP_PORT = resolvePort('ZDTP_PORT', 24683);
+
 export default defineConfig({
   base: '/',
   plugins: [
@@ -54,13 +73,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 44325,
+    port: VITE_PORT,
+    strictPort: true,
     proxy: {
       '/api/dev/apply': {
-        target: 'http://127.0.0.1:24683',
+        target: `http://127.0.0.1:${ZDTP_PORT}`,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/dev\/apply/, '/apply'),
       },
     },
+  },
+  preview: {
+    port: VITE_PORT,
+    strictPort: true,
   },
 });

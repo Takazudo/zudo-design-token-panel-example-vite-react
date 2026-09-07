@@ -36,7 +36,7 @@ import { clearPanelStorage, openPanel } from './panel-storage';
 // Constants
 // ---------------------------------------------------------------------------
 
-const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:44325';
+const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? `http://localhost:${process.env.VITE_PORT ?? 44325}`;
 
 /** Absolute URL for a hash route fragment. */
 function hashUrl(fragment: string): string {

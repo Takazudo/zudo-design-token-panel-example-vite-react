@@ -38,13 +38,31 @@ pnpm dev
 
 Runs two processes via `concurrently`:
 
-| process | port  | role                                                                         |
-| ------- | ----- | ---------------------------------------------------------------------------- |
-| Vite    | 44325 | the example site                                                             |
-| bin     | 24683 | `zdtp-server` — receives `/apply` POSTs, rewrites `tokens.css` |
+| process | port  | env var    | role                                                            |
+| ------- | ----- | ---------- | ---------------------------------------------------------------- |
+| Vite    | 44325 | `VITE_PORT` | the example site                                                 |
+| bin     | 24683 | `ZDTP_PORT` | `zdtp-server` — receives `/apply` POSTs, rewrites `tokens.css`   |
 
 Open [http://localhost:44325](http://localhost:44325) and run
 `window.vr.toggleDesignPanel()` in the browser console to open the panel.
+
+### Running concurrent worktrees on different ports
+
+Both ports default as above so a bare `pnpm dev` is unchanged. To run a
+second git worktree of this repo alongside the first without port
+collisions, override both env vars — the sidecar's allowed CORS origin is
+derived from `VITE_PORT` automatically, so the pair always stays in sync:
+
+```bash
+VITE_PORT=45325 ZDTP_PORT=25683 pnpm dev
+```
+
+Point Playwright at the same pair when testing that worktree:
+
+```bash
+VITE_PORT=45325 ZDTP_PORT=25683 pnpm exec playwright test
+VITE_PORT=45325 ZDTP_PORT=25683 pnpm test:apply-smoke
+```
 
 ## Build
 

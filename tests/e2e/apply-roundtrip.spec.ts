@@ -82,8 +82,11 @@ const APPLY_URL = `http://127.0.0.1:${ZDTP_PORT}/apply`;
 // The sidecar compares the forwarded Origin header verbatim against its own
 // --allow-origin, which `pnpm dev` derives from VITE_PORT. When the caller
 // supplies BASE_URL it also owns the sidecar's --allow-origin, so that value
-// wins over the port-derived default.
-const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? `http://localhost:${VITE_PORT}`;
+// wins over the port-derived default. An empty BASE_URL counts as unset —
+// same rule resolvePort applies — otherwise it would silently produce an
+// empty Origin header and every /apply POST would be rejected.
+const ORIGIN =
+  process.env.BASE_URL?.replace(/\/$/, '') || `http://localhost:${VITE_PORT}`;
 
 async function readTokenValue(cssVar: string): Promise<string> {
   const css = await readFile(TOKENS_PATH, 'utf-8');
@@ -127,7 +130,8 @@ test.describe('Vite + React example — apply pipeline round-trip', () => {
   const TARGET_VAR = '--vr-radius';
   /** The panel appends the item's configured unit itself — do not include it. */
   const TEST_INPUT = '1.25';
-  const TEST_VALUE = '1.25rem';
+  /** `--vr-radius` is declared `{ kind: 'length', unit: 'rem' }` in the manifest. */
+  const TEST_VALUE = `${TEST_INPUT}rem`;
   let originalValue = '';
 
   test.beforeAll(async () => {

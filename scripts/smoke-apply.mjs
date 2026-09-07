@@ -2,8 +2,9 @@
 /**
  * Manual smoke harness for the bin sidecar.
  *
- * Requires `pnpm dev` to already be running in this example sub-package
- * (so the bin is listening on http://127.0.0.1:24683). The harness:
+ * Requires `pnpm dev` to already be running in this example sub-package (so
+ * the bin is listening on 127.0.0.1:ZDTP_PORT, default 24683). Run it with
+ * the same VITE_PORT / ZDTP_PORT as that `pnpm dev`. The harness:
  *
  *   1. Reads the current value of `--vr-radius` from
  *      src/styles/tokens.css.
@@ -17,27 +18,17 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { VITE_PORT, ZDTP_PORT } from './ports.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const TOKENS_PATH = resolve(__dirname, '..', 'src', 'styles', 'tokens.css');
 
-// VITE_PORT / ZDTP_PORT let concurrent worktrees of this repo run on
-// distinct ports — see vite.config.ts and package.json's `_dev:vite` /
-// `_dev:tokens-bin`. ORIGIN must track VITE_PORT: the sidecar compares the
-// forwarded Origin header verbatim against its own --allow-origin.
-function resolvePort(envVar, fallback) {
-  const raw = process.env[envVar];
-  if (raw === undefined || raw === '') return fallback;
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed)) {
-    throw new Error(`${envVar} must be an integer port, got ${JSON.stringify(raw)}`);
-  }
-  return parsed;
-}
-
-const ZDTP_PORT = resolvePort('ZDTP_PORT', 24683);
-const VITE_PORT = resolvePort('VITE_PORT', 44325);
+// VITE_PORT / ZDTP_PORT let concurrent worktrees of this repo run on distinct
+// ports; ORIGIN must track VITE_PORT because the sidecar compares the
+// forwarded Origin header verbatim against its own --allow-origin. Both come
+// from scripts/ports.mjs so they cannot drift from package.json's
+// `_dev:tokens-bin` or from vite.config.ts's proxy target.
 const APPLY_URL = `http://127.0.0.1:${ZDTP_PORT}/apply`;
 const ORIGIN = `http://localhost:${VITE_PORT}`;
 const TARGET_VAR = '--vr-radius';

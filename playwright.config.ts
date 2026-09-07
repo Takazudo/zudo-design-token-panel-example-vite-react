@@ -8,22 +8,12 @@
  */
 
 import { defineConfig, devices } from '@playwright/test';
+// VITE_PORT lets concurrent worktrees of this repo run on distinct ports; it
+// resolves in exactly one place so vite.config.ts, package.json's
+// `_dev:tokens-bin` and this baseURL cannot disagree.
+import { VITE_PORT } from './scripts/ports.mjs';
 
 const hasExternalBaseUrl = Boolean(process.env.BASE_URL);
-
-// VITE_PORT lets concurrent worktrees of this repo run on distinct ports —
-// see vite.config.ts and package.json's `_dev:vite` / `_dev:tokens-bin`.
-function resolvePort(envVar: string, fallback: number): number {
-  const raw = process.env[envVar];
-  if (raw === undefined || raw === '') return fallback;
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed)) {
-    throw new Error(`${envVar} must be an integer port, got ${JSON.stringify(raw)}`);
-  }
-  return parsed;
-}
-
-const VITE_PORT = resolvePort('VITE_PORT', 44325);
 
 export default defineConfig({
   testDir: './tests/e2e',

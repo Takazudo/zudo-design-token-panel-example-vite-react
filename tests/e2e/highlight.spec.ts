@@ -31,12 +31,11 @@
 
 import { test, expect } from '@playwright/test';
 import { clearPanelStorage, openPanel } from './panel-storage';
+import { BROWSER_ORIGIN as ORIGIN } from '../../scripts/ports.mjs';
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const ORIGIN = process.env.BASE_URL?.replace(/\/$/, '') ?? `http://localhost:${process.env.VITE_PORT ?? 44325}`;
 
 /** Absolute URL for a hash route fragment. */
 function hashUrl(fragment: string): string {

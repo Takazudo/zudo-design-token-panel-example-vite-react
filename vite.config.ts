@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import mdx from '@mdx-js/rollup';
 import remarkGfm from 'remark-gfm';
+import { VITE_PORT, ZDTP_PORT } from './scripts/ports.mjs';
 
 /**
  * Vite + React example for @takazudo/zdtp.
@@ -37,23 +38,11 @@ import remarkGfm from 'remark-gfm';
  * Worktree-safe ports
  * -------------------
  * `VITE_PORT` / `ZDTP_PORT` let concurrent git worktrees of this repo run on
- * distinct port pairs. The proxy target below is derived from `ZDTP_PORT` —
- * it must never be configured independently of the sidecar's own `--port`
- * (see `_dev:tokens-bin` in package.json), or the two drift apart.
+ * distinct port pairs; both resolve in `scripts/ports.mjs`. The proxy target
+ * below is derived from `ZDTP_PORT` — it must never be configured
+ * independently of the sidecar's own `--port` (see `_dev:tokens-bin` in
+ * package.json), or the two drift apart.
  */
-function resolvePort(envVar: string, fallback: number): number {
-  const raw = process.env[envVar];
-  if (raw === undefined || raw === '') return fallback;
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed)) {
-    throw new Error(`${envVar} must be an integer port, got ${JSON.stringify(raw)}`);
-  }
-  return parsed;
-}
-
-const VITE_PORT = resolvePort('VITE_PORT', 44325);
-const ZDTP_PORT = resolvePort('ZDTP_PORT', 24683);
-
 export default defineConfig({
   base: '/',
   plugins: [

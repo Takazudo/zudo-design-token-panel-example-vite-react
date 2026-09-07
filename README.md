@@ -38,10 +38,10 @@ pnpm dev
 
 Runs two processes via `concurrently`:
 
-| process | port  | env var    | role                                                            |
-| ------- | ----- | ---------- | ---------------------------------------------------------------- |
-| Vite    | 44325 | `VITE_PORT` | the example site                                                 |
-| bin     | 24683 | `ZDTP_PORT` | `zdtp-server` — receives `/apply` POSTs, rewrites `tokens.css`   |
+| process | port  | env var     | role                                                          |
+| ------- | ----- | ----------- | ------------------------------------------------------------- |
+| Vite    | 44325 | `VITE_PORT` | the example site                                              |
+| bin     | 24683 | `ZDTP_PORT` | `zdtp-server` — receives `/apply` POSTs, rewrites `tokens.css` |
 
 Open [http://localhost:44325](http://localhost:44325) and run
 `window.vr.toggleDesignPanel()` in the browser console to open the panel.
@@ -57,10 +57,24 @@ derived from `VITE_PORT` automatically, so the pair always stays in sync:
 VITE_PORT=45325 ZDTP_PORT=25683 pnpm dev
 ```
 
-Point Playwright at the same pair when testing that worktree:
+Point Playwright at the same pair when testing that worktree. Playwright
+starts its own `pnpm dev` and does **not** reuse a running one, so stop that
+worktree's `pnpm dev` first:
 
 ```bash
 VITE_PORT=45325 ZDTP_PORT=25683 pnpm exec playwright test
+```
+
+To test against a `pnpm dev` you want to keep running, pass `BASE_URL` — that
+switches Playwright to caller-managed servers and skips its own `pnpm dev`:
+
+```bash
+BASE_URL=http://localhost:45325 ZDTP_PORT=25683 pnpm exec playwright test
+```
+
+`test:apply-smoke` always talks to a `pnpm dev` you started yourself:
+
+```bash
 VITE_PORT=45325 ZDTP_PORT=25683 pnpm test:apply-smoke
 ```
 

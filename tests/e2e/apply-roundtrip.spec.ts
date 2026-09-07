@@ -59,34 +59,17 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { openPanel } from './panel-storage';
+// ORIGIN: the sidecar compares the forwarded Origin header verbatim against
+// its own --allow-origin, which `pnpm dev` derives from VITE_PORT. When the
+// caller supplies BASE_URL it also owns the sidecar's --allow-origin, so that
+// value wins over the port-derived default — see scripts/ports.mjs.
+import { BROWSER_ORIGIN as ORIGIN, ZDTP_PORT } from '../../scripts/ports.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const TOKENS_PATH = resolve(__dirname, '..', '..', 'src', 'styles', 'tokens.css');
 
-/** Mirrors `resolvePort` in playwright.config.ts / scripts/smoke-apply.mjs. */
-function resolvePort(envVar: string, fallback: number): number {
-  const raw = process.env[envVar];
-  if (raw === undefined || raw === '') return fallback;
-  const parsed = Number(raw);
-  if (!Number.isInteger(parsed)) {
-    throw new Error(`${envVar} must be an integer port, got ${JSON.stringify(raw)}`);
-  }
-  return parsed;
-}
-
-const ZDTP_PORT = resolvePort('ZDTP_PORT', 24683);
-const VITE_PORT = resolvePort('VITE_PORT', 44325);
 const APPLY_URL = `http://127.0.0.1:${ZDTP_PORT}/apply`;
-
-// The sidecar compares the forwarded Origin header verbatim against its own
-// --allow-origin, which `pnpm dev` derives from VITE_PORT. When the caller
-// supplies BASE_URL it also owns the sidecar's --allow-origin, so that value
-// wins over the port-derived default. An empty BASE_URL counts as unset —
-// same rule resolvePort applies — otherwise it would silently produce an
-// empty Origin header and every /apply POST would be rejected.
-const ORIGIN =
-  process.env.BASE_URL?.replace(/\/$/, '') || `http://localhost:${VITE_PORT}`;
 
 async function readTokenValue(cssVar: string): Promise<string> {
   const css = await readFile(TOKENS_PATH, 'utf-8');
@@ -156,6 +139,12 @@ test.describe('Vite + React example — apply pipeline round-trip', () => {
   });
 
   test('panel-driven Apply rewrites the on-disk token value', async ({ page }) => {
+    // Triples the suite timeout (30s local / 60s CI). This test alone budgets
+    // 10s for the panel mount plus two 15s waits on the sidecar round-trip, so
+    // under the default it would blow the *test* timeout before either of
+    // those could report its own diagnostic message.
+    test.slow();
+
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 

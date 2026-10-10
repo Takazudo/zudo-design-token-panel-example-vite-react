@@ -19,11 +19,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(rollup@4.63.1)
       '@takazudo/zdtp':
-        specifier: 0.5.1
-        version: 0.5.1(preact@10.29.8)
-      preact:
-        specifier: ^10.29.8
-        version: 10.29.8
+        specifier: 0.8.6
+        version: 0.8.6
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -882,12 +879,10 @@ packages:
   '@tailwindcss/browser@4.3.2':
     resolution: {integrity: sha512-R6hewP9HHwLAY88bFkgAYFIQMRGi9bqx6sR1anI3IThTJtwhPlAm4aHIzDKrnJ8Ct4M3d5A9PCsah8Z5+EjLiQ==}
 
-  '@takazudo/zdtp@0.5.1':
-    resolution: {integrity: sha512-zxKMKsgzWpEpmmj749vAnBryDzYI4tH4WDq7g2eMOuNpixPmLTq8hevMro5kNCZokybb/tjy0LpZhVX6tJ7U6w==}
+  '@takazudo/zdtp@0.8.6':
+    resolution: {integrity: sha512-powstLG6d4tkEroYbT6iAJk1Da4xAYS8+enW/bcn6IupkzQQf3agAtXrlJ8XVoWs43puOsCR5/hgpMDFKP3d3g==}
     engines: {node: '>=22.0.0', pnpm: '>=10.0.0'}
     hasBin: true
-    peerDependencies:
-      preact: ^10.29.1
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -2311,12 +2306,14 @@ snapshots:
 
   '@tailwindcss/browser@4.3.2': {}
 
-  '@takazudo/zdtp@0.5.1(preact@10.29.8)':
+  '@takazudo/zdtp@0.8.6':
     dependencies:
       '@tailwindcss/browser': 4.3.2
       culori: 4.0.2
       preact: 10.29.8
       tailwind-merge: 3.6.0
+    transitivePeerDependencies:
+      - preact-render-to-string
 
   '@types/babel__core@7.20.5':
     dependencies:

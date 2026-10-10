@@ -20,8 +20,7 @@
   "dependencies": {
     "@mdx-js/react": "^3.1.1",
     "@mdx-js/rollup": "^3.1.1",
-    "@takazudo/zdtp": "0.5.1",
-    "preact": "^10.29.8",
+    "@takazudo/zdtp": "0.8.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.3",

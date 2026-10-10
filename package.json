@@ -15,6 +15,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "test:apply-smoke": "node scripts/smoke-apply.mjs"
   },
   "dependencies": {

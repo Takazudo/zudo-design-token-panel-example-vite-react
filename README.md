@@ -6,29 +6,16 @@ Standalone Vite 6 + React 18 example for
 Deployed to Cloudflare Workers Static Assets at
 `https://zdtp-vite-react.zudolab.dev/`.
 
-## Sibling layout
-
-This repo expects the panel package to live in a sibling directory:
-
-```
-$HOME/repos/zdtp-ex/
-├── zudo-design-token-panel/          # panel package (cloned sibling)
-│   └── packages/
-│       └── zudo-design-token-panel/
-└── zudo-design-token-panel-example-vite-react/   # this repo
-```
-
-The `package.json` references the panel as
-`"file:../zudo-design-token-panel/packages/zudo-design-token-panel"`.
-Running `pnpm install` alone on a fresh checkout **will fail** because the sibling is not present yet.
-
-## Bootstrap
+## Install
 
 ```bash
-pnpm setup:upstream
+pnpm install
 ```
 
-Clones `zudo-design-token-panel` at the pinned SHA, installs deps, and builds.
+The panel comes from npm, pinned exactly to `@takazudo/zdtp@0.8.6`. The panel
+owns its Preact runtime as a regular dependency and self-injects its
+stylesheet on first mount, so this React host declares neither `preact` nor a
+panel CSS import.
 
 ## Dev
 
@@ -58,15 +45,15 @@ VITE_PORT=45325 ZDTP_PORT=25683 pnpm dev
 ```
 
 Point Playwright at the same pair when testing that worktree. Playwright
-starts its own `pnpm dev` and does **not** reuse a running one, so stop that
-worktree's `pnpm dev` first:
+starts its own Vite server and sidecar (`_dev:vite` + `_dev:tokens-bin`) and
+does **not** reuse running ones, so stop that worktree's `pnpm dev` first:
 
 ```bash
-VITE_PORT=45325 ZDTP_PORT=25683 pnpm exec playwright test
+VITE_PORT=45325 ZDTP_PORT=25683 pnpm test:e2e
 ```
 
 To test against a `pnpm dev` you want to keep running, pass `BASE_URL` — that
-switches Playwright to caller-managed servers and skips its own `pnpm dev`:
+switches Playwright to caller-managed servers and starts none of its own:
 
 ```bash
 BASE_URL=http://localhost:45325 ZDTP_PORT=25683 pnpm exec playwright test
@@ -77,6 +64,20 @@ BASE_URL=http://localhost:45325 ZDTP_PORT=25683 pnpm exec playwright test
 ```bash
 VITE_PORT=45325 ZDTP_PORT=25683 pnpm test:apply-smoke
 ```
+
+## Browser tests
+
+```bash
+pnpm exec playwright install chromium   # once
+pnpm test:e2e
+```
+
+The suite drives the real panel against the real sidecar: a global setup
+checks that both listeners belong to this checkout, the apply spec writes
+`src/styles/tokens.css` through the panel's Apply flow and restores it
+byte-for-byte, and every test fails on any console error, page error or failed
+request. CI runs it in the blocking `browser` job of `deploy.yml`, which skips
+(and passes) only for content-only changes.
 
 ## Build
 

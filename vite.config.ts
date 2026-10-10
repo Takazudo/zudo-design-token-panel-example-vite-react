@@ -52,6 +52,13 @@ export default defineConfig({
     { enforce: 'pre', ...mdx({ jsxImportSource: 'react', providerImportSource: '@mdx-js/react', remarkPlugins: [remarkGfm] }) },
     react(),
   ],
+  optimizeDeps: {
+    // The dep scanner cannot read .mdx, so the `@mdx-js/react` import the MDX
+    // compiler injects into prose-demo.mdx is only found when prose.html is
+    // first served. The resulting mid-session re-optimization leaves the page
+    // holding two React copies ("Invalid hook call"). Prebundle it up front.
+    include: ['@mdx-js/react'],
+  },
   build: {
     rollupOptions: {
       // Multi-page: emit dist/index.html and dist/prose.html as self-contained

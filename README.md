@@ -105,3 +105,5 @@ Produces `dist/index.html` and `dist/prose.html` (multi-page build; `base: '/'`)
 - React 18 StrictMode is safe via the per-`storagePrefix` bind flag.
 - Panel state survives React rerenders and client-side navigation.
 - The apply pipeline round-trips token tweaks to disk via the bin sidecar.
+
+<!-- proof: content-only change (throwaway) -->

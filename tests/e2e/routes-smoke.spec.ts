@@ -7,13 +7,10 @@
  *      tab class moves to the clicked tab.
  *   3. (data only) All 5 data-component class selectors are present on the page.
  *
- * Prerequisites
- * -------------
- *  - Vite dev server on port 44325 by default, or `VITE_PORT` if set
- *    (started by the Playwright `webServer` config OR by an upstream
- *    `pnpm dev` invocation).
+ * The `diagnostics` fixture from ./support additionally fails a route on any
+ * console error, page error, failed request, or HTTP >= 400 response.
  *
- * Route inventory (7 routes tested):
+ * Route inventory (7 routes tested, all full loads via `page.goto`):
  *   /                   → Home          (index.html, hash route /)
  *   /#/about            → About
  *   /#/forms            → Form controls demo
@@ -22,36 +19,11 @@
  *   /#/data             → Data components (data-component assertion)
  *   /prose.html         → Prose typography demo (separate MPA entry)
  *
- * HashRouter routing
- * ------------------
- * The Vite + React example uses HashRouter so all React routes live under
- * `index.html` as URL fragments (#/about, #/forms, etc.).  The only exception
- * is the Prose page, which is a separate MPA entry at prose.html — NOT a
- * hash route.  Playwright's goto() with a full URL (origin + fragment) works
- * correctly; relative paths starting with '#' would fail because Playwright
- * treats them as page-relative anchors, not navigation destinations.
- *
- * We therefore build absolute URLs from the baseURL config constant.
+ * HashRouter routes live under `index.html` as URL fragments; `page.goto`
+ * needs the absolute URL (origin + fragment), which `hashUrl` builds.
  */
 
-import { test, expect } from '@playwright/test';
-// Origin the dev server is reachable at — BASE_URL when the caller manages
-// the servers, otherwise VITE_PORT. Same resolution playwright.config.ts uses
-// for baseURL, so the two cannot disagree.
-import { BROWSER_ORIGIN as ORIGIN } from '../../scripts/ports.mjs';
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-/** Absolute URL for a hash route (e.g. '#/forms' → 'http://localhost:44325/#/forms'). */
-function hashUrl(fragment: string): string {
-  const frag = fragment.startsWith('#') ? fragment : `#${fragment}`;
-  return `${ORIGIN}/${frag}`;
-}
-
-/** Absolute URL for the prose MPA page. */
-const PROSE_URL = `${ORIGIN}/prose.html`;
+import { PROSE_URL, expect, hashUrl, test } from './support';
 
 // ---------------------------------------------------------------------------
 // Route table
@@ -59,12 +31,12 @@ const PROSE_URL = `${ORIGIN}/prose.html`;
 
 /** Hash-router routes plus the separate MPA prose page. */
 const HASH_ROUTES = [
-  { label: 'Home',    fragment: '#/',        heading: /live token tweaking/i        },
-  { label: 'About',   fragment: '#/about',   heading: /about/i                      },
-  { label: 'Forms',   fragment: '#/forms',   heading: /form controls/i              },
-  { label: 'Status',  fragment: '#/status',  heading: /status/i                     },
-  { label: 'Widgets', fragment: '#/widgets', heading: /interactive widgets/i        },
-  { label: 'Data',    fragment: '#/data',    heading: /data.*demo|data.*media/i     },
+  { label: 'Home',    route: '/',        heading: /live token tweaking/i        },
+  { label: 'About',   route: '/about',   heading: /about/i                      },
+  { label: 'Forms',   route: '/forms',   heading: /form controls/i              },
+  { label: 'Status',  route: '/status',  heading: /status/i                     },
+  { label: 'Widgets', route: '/widgets', heading: /interactive widgets/i        },
+  { label: 'Data',    route: '/data',    heading: /data.*demo|data.*media/i     },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -74,7 +46,7 @@ const HASH_ROUTES = [
 test.describe('Vite + React example — routes smoke', () => {
   for (const route of HASH_ROUTES) {
     test(`${route.label} route: page heading is visible`, async ({ page }) => {
-      await page.goto(hashUrl(route.fragment));
+      await page.goto(hashUrl(route.route));
       await page.waitForLoadState('domcontentloaded');
 
       // .vr-page-title is the framework-prefixed heading class used across
@@ -110,7 +82,7 @@ test.describe('Vite + React example — routes smoke', () => {
   // -------------------------------------------------------------------------
 
   test('Widgets route: clicking each tab moves the active class', async ({ page }) => {
-    await page.goto(hashUrl('#/widgets'));
+    await page.goto(hashUrl('/widgets'));
     await page.waitForLoadState('domcontentloaded');
 
     // Wait for the tabs container.
@@ -146,7 +118,7 @@ test.describe('Vite + React example — routes smoke', () => {
   // -------------------------------------------------------------------------
 
   test('Data route: all 5 data-component selectors are present', async ({ page }) => {
-    await page.goto(hashUrl('#/data'));
+    await page.goto(hashUrl('/data'));
     await page.waitForLoadState('domcontentloaded');
 
     await expect(page.locator('.vr-stat-card').first()).toBeVisible({ timeout: 10_000 });

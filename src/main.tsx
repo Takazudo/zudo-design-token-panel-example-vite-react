@@ -1,9 +1,11 @@
 /**
  * Vite + React entry.
  *
- * The only static-side-effect imports here are stylesheets (the demo's
- * reset + tokens CSS plus the panel package's bundled chrome CSS via
- * `/styles`). The panel JS is intentionally NOT imported statically: doing
+ * The only static-side-effect imports here are the demo's own stylesheets
+ * (reset + tokens + components). The panel's chrome CSS is not imported: the
+ * panel self-injects its stylesheet when it first mounts (PORTABLE-CONTRACT
+ * §4.1.4), so visitors who never open it never download it. The panel JS is
+ * intentionally NOT imported statically either: doing
  * so pulls the entire panel module — Preact runtime, all tabs, all modals
  * — into the initial chunk and Vite folds the dynamic import in
  * `lib/mount-panel.ts` back into the same chunk (Rollup warning:
@@ -26,7 +28,6 @@ import ReactDOM from 'react-dom/client';
 import './styles/reset.css';
 import './styles/tokens.css';
 import './styles/components.css';
-import '@takazudo/zdtp/styles';
 
 import { App } from './App';
 

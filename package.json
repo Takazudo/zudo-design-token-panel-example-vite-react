@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "concurrently -k -n vite,tokens-bin -c blue,green \"pnpm run _dev:vite\" \"pnpm run _dev:tokens-bin\"",
     "_dev:vite": "vite",
-    "_dev:tokens-bin": "zdtp-server --write-root . --routing scaffold.routing.json --port ${ZDTP_PORT:-24683} --allow-origin http://localhost:${VITE_PORT:-44325}",
+    "_dev:tokens-bin": "zdtp-server --write-root . --routing missing.routing.json --port ${ZDTP_PORT:-24683} --allow-origin http://localhost:${VITE_PORT:-44325}",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

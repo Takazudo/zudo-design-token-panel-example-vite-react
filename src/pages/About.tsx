@@ -17,7 +17,8 @@ export function About() {
           This Vite + React example demonstrates{' '}
           <code>@takazudo/zdtp</code> running inside a plain
           React 18 host — no Tailwind, no design-system integration, just
-          React and Preact coexisting in the same Vite build.
+          the panel's own bundled renderer coexisting with React in the same
+          Vite build.
         </div>
       </div>
 

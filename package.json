@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Vite + React example app demonstrating @takazudo/zdtp — host-config-driven panel mounted as a Preact island from a useEffect, plus apply-pipeline round-trip via the bin sidecar.",
+  "description": "Vite + React example app demonstrating @takazudo/zdtp — host-config-driven panel lazily mounted from a useEffect (outside the React tree), plus apply-pipeline round-trip via the bin sidecar.",
   "packageManager": "pnpm@10.33.2",
   "engines": {
     "node": ">=22.12.0"

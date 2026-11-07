@@ -6,7 +6,7 @@
  * panel self-injects its stylesheet when it first mounts (PORTABLE-CONTRACT
  * §4.1.4), so visitors who never open it never download it. The panel JS is
  * intentionally NOT imported statically either: doing
- * so pulls the entire panel module — Preact runtime, all tabs, all modals
+ * so pulls the entire panel module — its bundled zudo-react runtime, all tabs, all modals
  * — into the initial chunk and Vite folds the dynamic import in
  * `lib/mount-panel.ts` back into the same chunk (Rollup warning:
  * "dynamic import will not move module into another chunk"), defeating

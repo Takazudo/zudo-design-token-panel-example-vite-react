@@ -10,8 +10,8 @@ import { VITE_PORT, ZDTP_PORT } from './scripts/ports.mjs';
  * Deliberately minimal: NO Tailwind, NO design-system integration, NO MDX,
  * NO `react -> preact/compat` alias. The example proves the panel package
  * works inside any Vite + React consumer that supplies just a `PanelConfig`.
- * The panel's own Preact runtime is a regular dependency of
- * `@takazudo/zdtp` (0.8.x), so this host does not declare `preact` itself.
+ * Since 0.9.0 the panel renders with its own bundled zudo-react runtime
+ * (no Preact), so this host declares no panel renderer itself.
  *
  * Apply-pipeline proxy
  * --------------------
@@ -24,8 +24,8 @@ import { VITE_PORT, ZDTP_PORT } from './scripts/ports.mjs';
  *
  * IMPORTANT: do NOT alias `react` -> `preact/compat`. The example must use
  * real React 18 — that is the entire point of the example. The panel renders
- * via its own Preact runtime inside the panel root element, fully isolated
- * from the host React tree.
+ * via its own bundled zudo-react runtime inside the panel root element,
+ * fully isolated from the host React tree.
  *
  * Deploy base path
  * ----------------

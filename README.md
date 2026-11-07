@@ -12,10 +12,24 @@ Deployed to Cloudflare Workers Static Assets at
 pnpm install
 ```
 
-The panel comes from npm, pinned exactly to `@takazudo/zdtp@0.8.6`. The panel
-owns its Preact runtime as a regular dependency and self-injects its
-stylesheet on first mount, so this React host declares neither `preact` nor a
-panel CSS import.
+The panel comes from npm, pinned to one exact `@takazudo/zdtp` version (see
+`package.json`). Since 0.9.0 the panel renders with its own bundled copy of
+zfb's zudo-react runtime (it no longer uses Preact) and self-injects its
+stylesheet on first mount, so this React host declares no panel renderer and
+no panel CSS import.
+
+### Which panel build is running?
+
+From 0.9.1 on, every mounted `.tokenpanel-shell` carries a `data-zdtp-version`
+attribute holding the version of the zdtp build that created it. Open the
+panel and run this in the browser console:
+
+```js
+document.querySelector('.tokenpanel-shell')?.dataset.zdtpVersion
+```
+
+The browser suite asserts that this value equals the `version` in the
+installed `node_modules/@takazudo/zdtp/package.json`.
 
 ## Dev
 
@@ -101,7 +115,8 @@ Produces `dist/index.html` and `dist/prose.html` (multi-page build; `base: '/'`)
 
 ## What the example proves
 
-- The panel works inside a real React 18 app **without** a `react -> preact/compat` alias.
+- The panel works inside a real React 18 app **without** a `react -> preact/compat` alias
+  (its bundled zudo-react runtime stays isolated from the host React tree).
 - React 18 StrictMode is safe via the per-`storagePrefix` bind flag.
 - Panel state survives React rerenders and client-side navigation.
 - The apply pipeline round-trips token tweaks to disk via the bin sidecar.

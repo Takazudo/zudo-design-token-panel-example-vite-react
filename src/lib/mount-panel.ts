@@ -4,8 +4,9 @@
  * The Astro example ships a package-provided host adapter
  * (`@takazudo/zdtp/astro/host-adapter`) that runs from a
  * per-page `<script>` block in `DesignTokenPanelHost.astro`. Vite + React has
- * no equivalent host component — the panel is mounted as a Preact island
- * from a React `useEffect`. So the adapter logic is ported here.
+ * no equivalent host component — the panel is mounted as a self-rendering
+ * island (its own bundled zudo-react runtime) from a React `useEffect`. So
+ * the adapter logic is ported here.
  *
  * Responsibilities (mirror the Astro adapter):
  *
@@ -69,7 +70,7 @@
  * is wider than the `:visible` flag this file used to check alone: `-open`,
  * `:autoload`, `-elpath-enabled` and `-domtweaker-enabled` also require the
  * panel to boot (the last two drive closed-shell features that need the
- * Preact shell mounted even when the panel itself is not visible).
+ * panel shell mounted even when the panel itself is not visible).
  *
  * Why this host does NOT call `setLifecycleAdapter`
  * ------------------------------------------------
@@ -81,7 +82,7 @@
  *
  *  - In-app routes use HashRouter (`#/about`, …). A hash change never
  *    touches the document: one React root stays mounted for the page
- *    lifetime, only `<Outlet>`'s subtree re-renders, and the panel's Preact
+ *    lifetime, only `<Outlet>`'s subtree re-renders, and the panel's
  *    island — mounted outside the React tree — is never unmounted. The
  *    inline custom properties the panel wrote to `:root` survive untouched,
  *    so there is nothing to re-apply.

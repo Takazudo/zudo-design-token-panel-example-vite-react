@@ -10,8 +10,13 @@
 #             otherwise it boots the real Vite dev server + zdtp-server
 #             sidecar and fails whenever the suite fails (including a server
 #             or sidecar that does not start). Needs no credentials.
-#   deploy  — push to `main` only: `wrangler deploy` (uploads the Worker AND
-#             attaches the custom domain from wrangler.toml).
+#   deploy  — push to `main` only, and only after BOTH `build` and `browser`
+#             succeeded (`needs: [build, browser]` with an explicit result
+#             check, so a failed, cancelled or skipped gate never deploys):
+#             `wrangler deploy` (uploads the Worker AND attaches the custom
+#             domain from wrangler.toml). A content-only push still deploys:
+#             `browser` itself succeeds there, it only skips its costly steps.
+#             A change-detection error fails `browser` and so blocks deploy.
 #   preview — non-draft pull requests only: uploads a preview version, asserts the
 #             preview actually serves the expected routing matrix, and
 #             comments its URL on the PR. Uses `wrangler versions upload`,
@@ -179,8 +184,11 @@ jobs:
 
   deploy:
     name: Deploy to Cloudflare Workers
-    needs: build
-    if: github.event_name == 'push'
+    needs: [build, browser]
+    if: >-
+      github.event_name == 'push' &&
+      needs.build.result == 'success' &&
+      needs.browser.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

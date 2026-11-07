@@ -19,6 +19,7 @@ import {
   PROSE_URL,
   closeViaHeader,
   expect,
+  expectShellBuiltFromInstalledZdtp,
   expectSinglePanelInstance,
   hashUrl,
   navigateViaSidenav,
@@ -61,6 +62,7 @@ test('sidenav navigation and back/forward are client-side swaps that keep one op
 }) => {
   await page.goto('/');
   await openViaHeader(page);
+  await expectShellBuiltFromInstalledZdtp(page);
   await setMarker(page);
 
   await navigateViaSidenav(page, 'About', '/about');
@@ -172,6 +174,7 @@ test('the Prose link is a full MPA load that keeps panel visibility and token ed
   expect(await marker(page)).toBeUndefined();
   await expect(panelShell(page)).toBeVisible();
   await expectSinglePanelInstance(page, 1);
+  await expectShellBuiltFromInstalledZdtp(page);
   await expect
     .poll(() =>
       page.evaluate(() =>

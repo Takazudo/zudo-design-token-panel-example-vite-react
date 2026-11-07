@@ -12,6 +12,7 @@
  */
 
 import { test as base, expect, type Locator, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BROWSER_ORIGIN, ZDTP_PORT } from '../../scripts/ports.mjs';
@@ -27,6 +28,8 @@ export const HOME_TITLE = 'Vite + React Example — Design Token Panel';
 // The panel derives its root id from `storagePrefix` in src/config/panel-config.ts.
 export const STORAGE_PREFIX = 'vite-react-example-tokens';
 export const PANEL_ROOT_ID = `${STORAGE_PREFIX}-root`;
+// src/config/panel-config.ts passes no `domTweaker`; flip this if it ever does.
+export const HOST_CONFIGURES_DOM_TWEAKER = false;
 
 export const test = base.extend<{ diagnostics: string[] }>({
   diagnostics: [
@@ -67,6 +70,28 @@ export function panelShell(page: Page): Locator {
   return page.locator('.tokenpanel-shell');
 }
 
+/** `version` of the zdtp build actually installed in this checkout, read at test time. */
+export function installedZdtpVersion(): string {
+  const manifest = resolve(REPO_ROOT, 'node_modules', '@takazudo', 'zdtp', 'package.json');
+  const { version } = JSON.parse(readFileSync(manifest, 'utf8')) as { version?: unknown };
+  if (typeof version !== 'string' || version === '') {
+    throw new Error(`no version field in ${manifest}`);
+  }
+  return version;
+}
+
+/**
+ * The one mounted, visible shell carries `data-zdtp-version` stamped with the
+ * version of the zdtp build that created it — proof the page runs the
+ * installed package and not a stale or duplicate copy.
+ */
+export async function expectShellBuiltFromInstalledZdtp(page: Page): Promise<void> {
+  const shell = panelShell(page);
+  await expect(shell).toHaveCount(1);
+  await expect(shell).toBeVisible();
+  await expect(shell).toHaveAttribute('data-zdtp-version', installedZdtpVersion());
+}
+
 /** The host's own trigger button (AppShell topbar / prose page), not the console API. */
 export async function toggleViaHeader(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Open Design Token Panel', exact: true }).click();
@@ -97,12 +122,18 @@ export async function navigateViaSidenav(page: Page, label: string, route: strin
 /**
  * Exactly one panel instance: one panel root, one set of the panel's
  * document-level mounts, one injected stylesheet, and at most one shell.
+ *
+ * Since zdtp 0.9.0 the DOM Tweaker mount exists only when the host passes
+ * `PanelConfig.domTweaker`, so its expected count follows this host's config.
  */
 export async function expectSinglePanelInstance(page: Page, shellCount: 0 | 1): Promise<void> {
   await expect(page.locator(`[id="${PANEL_ROOT_ID}"]`)).toHaveCount(1);
-  for (const mount of ['highlight', 'elpath', 'element-inspect', 'domtweaker']) {
+  for (const mount of ['highlight', 'elpath', 'element-inspect']) {
     await expect(page.locator(`[id="tokenpanel-${mount}-mount"]`)).toHaveCount(1);
   }
+  await expect(page.locator('[id="tokenpanel-domtweaker-mount"]')).toHaveCount(
+    HOST_CONFIGURES_DOM_TWEAKER ? 1 : 0,
+  );
   // The stylesheet the panel self-injects on first mount (PORTABLE-CONTRACT §4.1.4).
   await expect(page.locator('style#zudo-design-token-panel-styles')).toHaveCount(1);
   await expect(panelShell(page)).toHaveCount(shellCount);

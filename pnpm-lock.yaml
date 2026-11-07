@@ -19,8 +19,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(rollup@4.63.1)
       '@takazudo/zdtp':
-        specifier: 0.8.6
-        version: 0.8.6
+        specifier: 0.9.1
+        version: 0.9.1
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -879,10 +879,15 @@ packages:
   '@tailwindcss/browser@4.3.2':
     resolution: {integrity: sha512-R6hewP9HHwLAY88bFkgAYFIQMRGi9bqx6sR1anI3IThTJtwhPlAm4aHIzDKrnJ8Ct4M3d5A9PCsah8Z5+EjLiQ==}
 
-  '@takazudo/zdtp@0.8.6':
-    resolution: {integrity: sha512-powstLG6d4tkEroYbT6iAJk1Da4xAYS8+enW/bcn6IupkzQQf3agAtXrlJ8XVoWs43puOsCR5/hgpMDFKP3d3g==}
+  '@takazudo/zdtp@0.9.1':
+    resolution: {integrity: sha512-qm7whjw99qXR9NxB7OrMB1IiIFnw3Nl8SgjLWKYqltxCRMFjh6eyNNj3JYevtD1WnNIG5qsDuUS7H12BRD/ufA==}
     engines: {node: '>=22.0.0', pnpm: '>=10.0.0'}
     hasBin: true
+    peerDependencies:
+      '@takazudo/zfb': ^5.1.2
+    peerDependenciesMeta:
+      '@takazudo/zfb':
+        optional: true
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -1416,14 +1421,6 @@ packages:
   postcss@8.5.28:
     resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
     engines: {node: ^10 || ^12 || >=14}
-
-  preact@10.29.8:
-    resolution: {integrity: sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==}
-    peerDependencies:
-      preact-render-to-string: '>=5'
-    peerDependenciesMeta:
-      preact-render-to-string:
-        optional: true
 
   property-information@7.2.0:
     resolution: {integrity: sha512-IAtzIB6sUiWaJYrX9smp3V46pBGbBeLFRGdh25kg1334VcBlD8HzhPeNIWQH9zhGmo2itIe25EHt9dQP7G5hmg==}
@@ -2306,14 +2303,11 @@ snapshots:
 
   '@tailwindcss/browser@4.3.2': {}
 
-  '@takazudo/zdtp@0.8.6':
+  '@takazudo/zdtp@0.9.1':
     dependencies:
       '@tailwindcss/browser': 4.3.2
       culori: 4.0.2
-      preact: 10.29.8
       tailwind-merge: 3.6.0
-    transitivePeerDependencies:
-      - preact-render-to-string
 
   '@types/babel__core@7.20.5':
     dependencies:
@@ -3175,8 +3169,6 @@ snapshots:
       nanoid: 3.3.18
       picocolors: 1.1.1
       source-map-js: 1.2.1
-
-  preact@10.29.8: {}
 
   property-information@7.2.0: {}
 
